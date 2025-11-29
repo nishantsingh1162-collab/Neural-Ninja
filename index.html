@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Home Service Finder — Frontend</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-image: url('https://assets-iron-cloud.s3.ap-south-1.amazonaws.com/model-generated-images/tools_faded.png'); /* Faded version of your logo */
+      background-repeat: repeat;
+      background-size: 150px; /* Adjust size as needed */
+      background-attachment: fixed; /* Keeps watermark fixed when scrolling */
+    }
+  </style>
+</head>
+<body class="bg-blue-50 text-gray-900">
+  <header class="bg-blue-600 text-white py-4 shadow">
+    <div class="max-w-6xl mx-auto px-4 flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="https://assets-iron-cloud.s3.ap-south-1.amazonaws.com/model-generated-images/tools.png" alt="Home Service Finder Logo" class="h-10 w-10 mr-3">
+        <h1 class="text-2xl font-bold">Home Service Finder</h1>
+      </div>
+      <nav class="space-x-4 text-sm">
+        <a href="#workers" class="hover:underline">Workers</a>
+        <a href="#register" class="hover:underline">Register</a>
+        <a href="#reviews" class="hover:underline">Reviews</a>
+        <a href="#complaints" class="hover:underline">Complaints</a>
+        <a href="#admin" class="hover:underline">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-6">
+
+    <section class="bg-white p-6 rounded-2xl shadow mb-6">
+      <div class="flex gap-3">
+        <input id="globalSearch" type="text" placeholder="Search electricians, plumbers..." class="flex-1 p-3 border rounded-xl" />
+        <button id="refreshWorkers" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Refresh</button>
+      </div>
+    </section>
+
+    <section id="workerProfile" class="bg-white p-6 rounded-2xl shadow mb-8 hidden">
+      <button onclick="document.getElementById('workerProfile').classList.add('hidden')" class="float-right text-gray-500 hover:text-gray-900 font-bold text-xl">&times;</button>
+      <h2 class="text-2xl font-bold mb-4" id="profileName"></h2>
+      <div id="profileContent" class="space-y-3"></div>
+    </section>
+
+    <section id="workers" class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">Available Workers</h2>
+      <div id="workerCards" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+    </section>
+
+    <section id="register" class="bg-white p-6 rounded-2xl shadow mb-8">
+      <h2 class="text-xl font-semibold mb-4">Worker Registration (Aadhaar required)</h2>
+
+      <form id="workerForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input id="w_name" type="text" placeholder="Full name" class="p-3 border rounded-xl" required />
+        <input id="w_phone" type="text" placeholder="Phone" class="p-3 border rounded-xl" required />
+        <input id="w_aadhaar" type="text" placeholder="Aadhaar number (12 digits)" class="p-3 border rounded-xl" required />
+        <select id="w_category" class="p-3 border rounded-xl">
+          <option>Electrician</option>
+          <option>Plumber</option>
+          <option>Carpenter</option>
+          <option>Cleaner</option>
+          <option>Painter</option>
+          <option>Appliance Repair</option>
+        </select>
+        <input id="w_experience" type="number" min="0" placeholder="Experience (years)" class="p-3 border rounded-xl" />
+        <input id="w_price" type="number" min="0" placeholder="Price (₹ per visit)" class="p-3 border rounded-xl" />
+
+        <div class="md:col-span-2">
+          <label class="block mb-2 font-medium">Live location (worker)</label>
+          <div class="flex gap-2">
+            <input id="workerLocation" readonly placeholder="Click 'Get Location' to fill" class="flex-1 p-3 border rounded-xl" />
+            <button type="button" id="getWorkerLocationBtn" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Get Location</button>
+          </div>
+        </div>
+
+        <textarea id="w_about" placeholder="About (skills, certifications)" class="p-3 border rounded-xl md:col-span-2"></textarea>
+
+        <div class="md:col-span-2 flex gap-2">
+          <button class="bg-green-600 text-white px-6 py-3 rounded-xl" type="submit">Register</button>
+          <button id="clearWorker" type="button" class="px-6 py-3 rounded-xl bg-gray-200">Clear</button>
+        </div>
+
+        <p id="worker_msg" class="md:col-span-2 text-sm text-red-600"></p>
+      </form>
+    </section>
+
+    <section id="reviews" class="bg-white p-6 rounded-2xl shadow mb-8">
+      <h2 class="text-xl font-semibold mb-4">Add Review</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <select id="reviewWorker" class="p-3 border rounded-xl"></select>
+        <select id="reviewRating" class="p-3 border rounded-xl">
+          <option value="5">5 - Excellent</option>
+          <option value="4">4 - Very Good</option>
+          <option value="3">3 - Good</option>
+          <option value="2">2 - Fair</option>
+          <option value="1">1 - Poor</option>
+        </select>
+        <button id="submitReview" class="bg-green-600 text-white px-4 py-2 rounded-xl">Submit</button>
+      </div>
+      <textarea id="reviewText" placeholder="Write your review..." class="mt-4 p-3 border rounded-xl"></textarea>
+      <div id="reviewList" class="mt-6 space-y-4"></div>
+    </section>
+
+    <section id="complaints" class="bg-white p-6 rounded-2xl shadow mb-8">
+      <h2 class="text-xl font-semibold mb-4">File Complaint</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <select id="complainWorker" class="p-3 border rounded-xl"></select>
+        <button id="submitComplaint" class="bg-red-600 text-white px-4 py-2 rounded-xl">Submit Complaint</button>
+      </div>
+      <textarea id="complaintText" placeholder="Describe the issue..." class="mt-4 p-3 border rounded-xl"></textarea>
+      <div id="complaintList" class="mt-6 space-y-4"></div>
+    </section>
+
+    <section id="admin" class="bg-white p-6 rounded-2xl shadow mb-12">
+      <h2 class="text-xl font-semibold mb-4">Admin</h2>
+      <div class="flex gap-2">
+        <button id="btnViewPending" class="bg-blue-600 text-white px-4 py-2 rounded-xl">View Pending</button>
+        <button id="btnFetchAll" class="bg-gray-200 px-4 py-2 rounded-xl">Fetch All</button>
+      </div>
+      <div id="pendingList" class="mt-6"></div>
+    </section>
+
+  </main>
+
+<script>
+const API = 'http://localhost:5000/api';
+
+function el(html){ const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
+function escapeHtml(s){ if(!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('<','&gt;'); }
+
+// --- DUMMY DATA FOR FRONTEND TESTING ---
+const DUMMY_WORKERS = [
+    { _id: 'w1', name: 'Rajesh Sharma', category: 'Electrician', experience: 10, price: 350, avgRating: 4.8, about: 'Experienced in residential and commercial wiring. Certified professional.', aadhaar: '************', location: '28.7041,77.1025' },
+    { _id: 'w2', name: 'Priya Verma', category: 'Plumber', experience: 5, price: 250, avgRating: 4.2, about: 'Specializes in water heater installation and pipe repair.', aadhaar: '************', location: '19.0760,72.8777' },
+    { _id: 'w3', name: 'Abdul Khan', category: 'Carpenter', experience: 15, price: 500, avgRating: 4.9, about: 'Custom furniture and complex woodwork. Excellent finishing skills.', aadhaar: '************', location: '13.0827,80.2707' }
+];
+
+// Aadhaar validation (Option 1): 12 digits only
+function validateAadhaar(a){ return /^\d{12}$/.test(a); }
+
+// Fetch workers (approved) and return JSON
+async function fetchWorkers(q=''){
+  try {
+    const url = API + '/workers' + (q ? ('?q=' + encodeURIComponent(q)) : '');
+    const res = await fetch(url);
+    if (res.ok) {
+        return await res.json();
+    }
+  } catch(e) {
+    console.warn("Backend not running, using dummy data.", e);
+  }
+  
+  // Fallback for frontend-only view
+  if(q) {
+      return DUMMY_WORKERS.filter(w => w.name.toLowerCase().includes(q.toLowerCase()) || w.category.toLowerCase().includes(q.toLowerCase()));
+  }
+  return DUMMY_WORKERS;
+}
+
+// Render workers grid
+async function renderWorkers(q=''){
+  const list = await fetchWorkers(q);
+  const container = document.getElementById('workerCards');
+  container.innerHTML = '';
+  list.forEach(w=>{
+    const avg = (w.avgRating||0).toFixed(1);
+    const card = el(`
+      <div class="bg-white p-4 rounded-2xl shadow">
+        <div class="h-36 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-gray-400">Photo</div>
+        <h3 class="text-lg font-semibold">${escapeHtml(w.name)}</h3>
+        <div class="text-sm text-gray-600">${escapeHtml(w.category)} • ${escapeHtml(String(w.experience||0))} yrs</div>
+        <div class="font-semibold mt-2">₹${escapeHtml(String(w.price||0))}/visit</div>
+        <div class="text-yellow-500 font-semibold mt-1">⭐ ${avg}</div>
+        <div class="mt-3 grid grid-cols-2 gap-2">
+          <button class="bg-green-600 text-white px-3 py-1 rounded" onclick="startBooking('${w._id}')">Book</button>
+          <button class="bg-blue-600 text-white px-3 py-1 rounded" onclick="viewProfile('${w._id}')">View</button>
+        </div>
+      </div>
+    `);
+    container.appendChild(card);
+  });
+  populateSelects(list);
+}
+
+function populateSelects(workers){
+  const reviewSel = document.getElementById('reviewWorker');
+  const complainSel = document.getElementById('complainWorker');
+  [reviewSel, complainSel].forEach(sel=>{
+    sel.innerHTML = '';
+    const blank = document.createElement('option'); blank.value=''; blank.textContent='-- choose worker --'; sel.appendChild(blank);
+    workers.forEach(w=>{
+      const opt = document.createElement('option'); opt.value = w._id; opt.textContent = `${w.name} (${w.category})`; sel.appendChild(opt);
+    });
+  });
+}
+
+// Register worker (Aadhaar mandatory)
+document.getElementById('workerForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('w_name').value.trim();
+  const phone = document.getElementById('w_phone').value.trim();
+  const aadhaar = document.getElementById('w_aadhaar').value.trim();
+  const category = document.getElementById('w_category').value;
+  const experience = Number(document.getElementById('w_experience').value||0);
+  const price = Number(document.getElementById('w_price').value||0);
+  const about = document.getElementById('w_about').value.trim();
+  const location = document.getElementById('workerLocation')?.value || '';
+
+  const msgEl = document.getElementById('worker_msg'); msgEl.textContent = '';
+  if(!validateAadhaar(aadhaar)) { msgEl.textContent = 'Aadhaar must be 12 digits and is required.'; return; }
+
+  const payload = { name, phone, aadhaar, category, experience, price, about, location };
+  
+  // Frontend only simulation of registration
+  document.getElementById('workerForm').reset();
+  const successMsg = `${name} registered for ${category}. (Frontend-only simulation: Awaiting approval)`;
+  msgEl.style.color = 'green'; 
+  msgEl.textContent = successMsg;
+  // In a real app, this would be an API call:
+  // const res = await fetch(API + '/workers', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  // const j = await res.json();
+  // msgEl.textContent = j.message || 'Registered — awaiting approval';
+
+  await renderWorkers();
+});
+
+document.getElementById('clearWorker').addEventListener('click', ()=>document.getElementById('workerForm').reset());
+
+// Worker geolocation
+document.getElementById('getWorkerLocationBtn').addEventListener('click', ()=>{
+  if(!navigator.geolocation) return alert('Geolocation not supported');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById('workerLocation').value = pos.coords.latitude + ',' + pos.coords.longitude;
+  }, err=>alert('Unable to get location: ' + err.message));
+});
+
+// Reviews
+document.getElementById('submitReview').addEventListener('click', async ()=>{
+  const workerId = document.getElementById('reviewWorker').value; if(!workerId) return alert('Select worker');
+  const rating = Number(document.getElementById('reviewRating').value); const text = document.getElementById('reviewText').value.trim();
+  // API call would go here
+  document.getElementById('reviewText').value = '';
+  alert(`Review for ${workerId} submitted! Rating: ${rating}. (Frontend-only simulation)`);
+  await loadReviews(); await renderWorkers();
+});
+
+async function loadReviews(){
+  // Using dummy data if API fails
+  const list = [{workerName: 'Rajesh Sharma', rating: 5, text: 'Fantastic service, highly recommend!'}, {workerName: 'Priya Verma', rating: 4, text: 'Quick and efficient pipe fix.'}];
+  
+  const container = document.getElementById('reviewList'); container.innerHTML = '';
+  list.reverse().forEach(r=>{ const wName = r.workerName||'Worker'; const elc = el(`<div class="p-3 bg-gray-50 rounded"><strong>${escapeHtml(wName)}</strong> — ⭐ ${r.rating}<div class="mt-2 text-sm text-gray-700">${escapeHtml(r.text||'')}</div></div>`); container.appendChild(elc); });
+}
+
+// Complaints
+document.getElementById('submitComplaint').addEventListener('click', async ()=>{
+  const workerId = document.getElementById('complainWorker').value; const text = document.getElementById('complaintText').value.trim();
+  if(!workerId||!text) return alert('Select worker & describe the issue');
+  // API call would go here
+  document.getElementById('complaintText').value = '';
+  alert(`Complaint for ${workerId} submitted. (Frontend-only simulation)`);
+  await loadComplaints();
+});
+
+async function loadComplaints(){ 
+    // Using dummy data if API fails
+    const list = [{workerName: 'Abdul Khan', text: 'Arrived 1 hour late.', status: 'open'}];
+
+    const container = document.getElementById('complaintList'); container.innerHTML=''; 
+    list.reverse().forEach(c=>{ const elc = el(`<div class="p-3 bg-gray-50 rounded"><strong>Worker:</strong> ${escapeHtml(c.workerName||'Unknown')}<div class="mt-2 text-sm">${escapeHtml(c.text)}</div><div class="mt-2 text-xs text-gray-500">Status: ${escapeHtml(c.status||'open')}</div></div>`); container.appendChild(elc); 
+  }); 
+}
+
+// Admin pending
+document.getElementById('btnViewPending').addEventListener('click', async ()=>{
+  // Using dummy data for pending list
+  const list = [{_id: 'pending1', name: 'New Joiner', category: 'Cleaner', experience: 1}]; 
+  
+  const container = document.getElementById('pendingList'); container.innerHTML=''; 
+  if(!list.length){ container.innerHTML='<p class="text-gray-600">No pending workers</p>'; return; }
+  
+  list.forEach(w=>{
+    const row = el(`<div class="p-3 bg-white rounded flex justify-between items-center"><div><strong>${escapeHtml(w.name)}</strong><div class="text-sm text-gray-600">${escapeHtml(w.category)} — ${escapeHtml(String(w.experience||0))} yrs</div></div></div>`);
+    const btns = document.createElement('div');
+    const approve = document.createElement('button'); approve.className='bg-green-600 text-white px-3 py-1 rounded mr-2'; approve.textContent='Approve'; approve.addEventListener('click', async ()=>{ 
+        alert(`Approved worker ${w.name} (Frontend-only simulation)`);
+        row.remove(); await renderWorkers(); 
+    });
+    const reject = document.createElement('button'); reject.className='bg-red-600 text-white px-3 py-1 rounded'; reject.textContent='Reject'; reject.addEventListener('click', async ()=>{ 
+        alert(`Rejected worker ${w.name} (Frontend-only simulation)`);
+        row.remove(); await renderWorkers(); 
+    });
+    btns.appendChild(approve); btns.appendChild(reject); row.appendChild(btns); container.appendChild(row);
+  });
+});
+
+// Booking demo
+function startBooking(workerId){ const name = prompt('Your name'); const datetime = prompt('Preferred date/time (YYYY-MM-DDTHH:MM)'); if(!name||!datetime)return alert('Cancelled'); alert(`Booking requested for ${workerId} on ${datetime} by ${name}. (Frontend-only simulation)`); }
+
+// View profile - Renders worker details in the new section
+async function viewProfile(id){ 
+    let w = DUMMY_WORKERS.find(worker => worker._id === id); // Use dummy data for finding the worker
+    
+    // In a real app, you'd fetch the worker:
+    // const res = await fetch(API + '/workers/' + id); 
+    // if(res.status===200) w = await res.json();
+    
+    if(!w) return alert('Worker profile not found (ID: '+id+')'); 
+
+    const profileSection = document.getElementById('workerProfile');
+    const nameEl = document.getElementById('profileName');
+    const contentEl = document.getElementById('profileContent');
+
+    nameEl.textContent = w.name;
+    contentEl.innerHTML = `
+        <div class="flex items-center space-x-4">
+            <div class="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">Photo</div>
+            <div>
+                <p class="text-lg font-semibold">${escapeHtml(w.category)}</p>
+                <p class="text-sm text-gray-600">Experience: ${escapeHtml(String(w.experience||0))} yrs</p>
+                <p class="text-xl font-bold text-blue-700">Price: ₹${escapeHtml(String(w.price||0))}/visit</p>
+                <p class="text-yellow-500 font-semibold mt-1">⭐ ${(w.avgRating||0).toFixed(1)}</p>
+            </div>
+        </div>
+        <hr class="my-4">
+        <p><strong>About:</strong> ${escapeHtml(w.about||'N/A')}</p>
+        <p><strong>Phone:</strong> <span class="text-green-600">***-***-${escapeHtml(w.phone?.slice(-4) || 'N/A')}</span> (Available upon booking)</p>
+        <p><strong>Aadhaar:</strong> <span class="text-red-500">***-***-${escapeHtml(w.aadhaar?.slice(-4) || 'N/A')}</span> (Verified)</p>
+        <p><strong>Location:</strong> <span class="text-gray-500">${escapeHtml(w.location||'N/A')}</span></p>
+        <div class="mt-4">
+          <button class="bg-green-600 text-white px-4 py-2 rounded-xl" onclick="startBooking('${w._id}')">Book Now</button>
+        </div>
+    `;
+
+    profileSection.classList.remove('hidden');
+    // Scroll to the profile section
+    profileSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Search handler
+document.getElementById('globalSearch').addEventListener('input', async (e)=>{ const q=e.target.value.trim(); renderWorkers(q); });
+
+// Refresh
+document.getElementById('refreshWorkers').addEventListener('click', ()=>renderWorkers());
+
+async function init(){ await renderWorkers(); await loadReviews(); await loadComplaints(); }
+
+init();
+</script>
+</body>
+</html>
